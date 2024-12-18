@@ -34,14 +34,17 @@ runs:
 
         - name: Install dependencies
           working-directory: ${{ inputs.WORKING_DIRECTORY }}
+          shell: bash
           run: npm i
 
         - name: Build
           working-directory: ${{ inputs.WORKING_DIRECTORY }}
+          shell: bash
           run: npm run build
 
         - name: Publish to npm
           working-directory: ${{ inputs.WORKING_DIRECTORY }}
+          shell: bash
           env:
               NPM_TOKEN: ${{ inputss.NPM_TOKEN }}
               VERSION: ${{ inputss.VERSION }}

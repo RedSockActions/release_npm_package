@@ -1,0 +1,53 @@
+name: "RedSock/NPM package releaser"
+description: "Creates assembles and publish npm package to npm repo"
+
+author: "RedSock"
+
+branding:
+    icon: "package"
+    color: "red"
+
+inputs:
+    WORKING_DIRECTORY:
+        description: "Path to folder from which package will be assembled and published"
+        default: "."
+    NPM_TOKEN:
+        description: "Npm token to authorize in NPM registry"
+        required: true
+    VERSION:
+        description: "Version to publish"
+        required: true
+runs:
+    using: "composite"
+    steps:
+        - name: Checkout
+          uses: actions/checkout@v4
+          with:
+              ref: ${{ github.ref }}
+              fetch-depth: 0
+
+        - name: Set up Node.js
+          uses: actions/setup-node@v3
+          with:
+              node-version: 20
+              registry-url: https://registry.npmjs.org/
+
+        - name: Install dependencies
+          working-directory: ${{ inputs.WORKING_DIRECTORY }}
+          run: npm i
+
+        - name: Build
+          working-directory: ${{ inputs.WORKING_DIRECTORY }}
+          run: npm run build
+
+        - name: Publish to npm
+          working-directory: ${{ inputs.WORKING_DIRECTORY }}
+          env:
+              NPM_TOKEN: ${{ inputss.NPM_TOKEN }}
+              VERSION: ${{ inputss.VERSION }}
+          run: |
+              echo "//registry.npmjs.org/:_authToken=${NPM_TOKEN}" > .npmrc
+              export VERSION=$(echo "${VERSION}" | sed 's/^v//')
+              
+              jq --arg version "$VERSION" '.version = $version' package.json > temp && mv temp package.json
+              yarn publish --non-interactive --access public --tag latest
